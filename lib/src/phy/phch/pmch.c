@@ -39,10 +39,10 @@
 
 const static srsran_mod_t modulations[4] = {SRSRAN_MOD_BPSK, SRSRAN_MOD_QPSK, SRSRAN_MOD_16QAM, SRSRAN_MOD_64QAM};
 
-static int pmch_cp(srsran_pmch_t* q, cf_t* input, cf_t* output, uint32_t lstart_grant, bool put, srsran_scs_t scs, uint32_t sf)
+static int pmch_cp(srsran_pmch_t* q, cf_t* input, cf_t* output, uint32_t lstart_grant, bool put, srsran_scs_t scs, uint32_t sf) // - equalizzazione e mappatura simboli del canale
 {
   uint32_t s, n, l, lp, lstart, lend, nof_refs;
-  cf_t *   in_ptr = input, *out_ptr = output;
+  cf_t *   in_ptr = input, *out_ptr = output;  // - variabili per simboli di ingresso e uscita
   uint32_t offset = 0;
 
 #ifdef DEBUG_IDX
@@ -54,9 +54,9 @@ static int pmch_cp(srsran_pmch_t* q, cf_t* input, cf_t* output, uint32_t lstart_
   }
 #endif
   nof_refs = srsran_refsignal_mbsfn_rs_per_symbol(scs);
-  for (s = 0; s < SRSRAN_MBSFN_NOF_SLOTS(scs); s++) {
-    for (l = 0; l < SRSRAN_MBSFN_NOF_SYMBOLS(scs); l++) {
-      for (n = 0; n < q->cell.nof_prb; n++) {
+  for (s = 0; s < SRSRAN_MBSFN_NOF_SLOTS(scs); s++) {    // - s intervallo di tempo 
+    for (l = 0; l < SRSRAN_MBSFN_NOF_SYMBOLS(scs); l++) {   // - l sono simboli
+      for (n = 0; n < q->cell.nof_prb; n++) {  // - iterazione su PRB
         // If this PRB is assigned
         if (s == 0) {
           lstart = lstart_grant;
@@ -286,7 +286,7 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
                        srsran_pdsch_res_t*    out)
 {
   uint32_t i, n;
-
+  // - controlla che i puntatori non siano vuoti
   if (q != NULL && sf_symbols != NULL && out != NULL && cfg != NULL) {
     INFO("Decoding PMCH SF: %d, MBSFN area ID: 0x%x, Mod %s, TBS: %d, NofSymbols: %d, NofBitsE: %d, rv_idx: %d, "
          "C_prb=%d, cfi=%d",
@@ -301,6 +301,8 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
          sf->cfi);
 
     uint32_t lstart = SRSRAN_NOF_CTRL_SYMBOLS(q->cell, sf->cfi);
+    
+        // - Itera attraverso le antenne di ricezione e estrae i simboli
     for (int j = 0; j < q->nof_rx_antennas; j++) {
       /* extract symbols */
       n = pmch_get(q, sf_symbols[j], q->symbols[j], lstart, sf->subcarrier_spacing, sf->tti % 10);
