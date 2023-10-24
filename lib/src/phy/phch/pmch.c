@@ -19,6 +19,9 @@
  *
  */
 
+
+#include <complex.h>
+
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
@@ -361,6 +364,18 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
       DEBUG("SAVED FILE llr.dat: LLR estimates after demodulation and descrambling");
       srsran_vec_save_file("llr.dat", q->e, cfg->pdsch_cfg.grant.tb[0].nof_bits * sizeof(int16_t));
     }
+    // - modified PoliMI
+    short *qb = q->e;
+    for (int i = 0; i < cfg->pdsch_cfg.grant.tb[0].nof_bits; i++) {
+      if (qb[i] > 400){
+        qb[i] = 400;
+      }    
+      if (qb[i] < -400){
+        qb[i] = -400;
+      }    
+    }
+    // - modified PoliMI
+
     out[0].crc                  = (srsran_dlsch_decode(&q->dl_sch, &cfg->pdsch_cfg, q->e, out[0].payload) == 0);
     out[0].avg_iterations_block = srsran_sch_last_noi(&q->dl_sch);
 
