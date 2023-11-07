@@ -292,14 +292,14 @@ int srsran_predecoding_single_gen(cf_t* y[SRSRAN_MAX_PORTS],
                                   float scaling,
                                   float noise_estimate)
 {
-  for (int i = 0; i < nof_symbols; i++) {
+  for (int i = 0; i < nof_symbols; i++) {   //per ogni simbolo
     cf_t r  = 0;
     cf_t hh = 0;
     for (int p = 0; p < nof_rxant; p++) {
-      r += y[p][i] * conjf(h[p][i]);
-      hh += conjf(h[p][i]) * h[p][i];
+      r += y[p][i] * conjf(h[p][i]); // (numeratore a + b*)
+      hh += conjf(h[p][i]) * h[p][i]; //modulo al quadrato di H (denominatore)
     }
-    x[i] = r / ((hh + noise_estimate) * scaling);
+    x[i] = r / ((hh + noise_estimate) * scaling); // (a+b*)/(|h|^2 + chest) -- sono 2 divisioni reali
   }
   return nof_symbols;
 }
@@ -392,8 +392,8 @@ int srsran_predecoding_single(cf_t*  y_,
 }
 
 /* ZF/MMSE SISO equalizer x=y(h'h+no)^(-1)h' (ZF if n0=0.0)*/
-int srsran_predecoding_single_multi(cf_t*  y[SRSRAN_MAX_PORTS],
-                                    cf_t*  h[SRSRAN_MAX_PORTS],
+int srsran_predecoding_single_multi(cf_t*  y[SRSRAN_MAX_PORTS],  //symbols
+                                    cf_t*  h[SRSRAN_MAX_PORTS],  //stima di canale
                                     cf_t*  x,
                                     float* csi[SRSRAN_MAX_CODEWORDS],
                                     int    nof_rxant,

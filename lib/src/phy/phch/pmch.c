@@ -347,6 +347,7 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
              SRSRAN_NOF_RE(q->cell),
              cfg->pdsch_cfg.grant.nof_re);
       srsran_vec_save_file("hest2.dat", channel->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
+      srsran_vec_save_file("hest1.dat", channel->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
       DEBUG("SAVED FILE pmch_symbols.dat: symbols after equalization");
       srsran_vec_save_file("pmch_symbols.bin", q->d, cfg->pdsch_cfg.grant.nof_re * sizeof(cf_t));
     }
@@ -355,7 +356,7 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
      * The MAX-log-MAP algorithm used in turbo decoding is unsensitive to SNR estimation,
      * thus we don't need tot set it in thde LLRs normalization
      */
-    srsran_demod_soft_demodulate_s(cfg->pdsch_cfg.grant.tb[0].mod, q->d, q->e, cfg->pdsch_cfg.grant.nof_re);
+    srsran_demod_soft_demodulate_s(cfg->pdsch_cfg.grant.tb[0].mod, q->d, q->e, cfg->pdsch_cfg.grant.nof_re); //demodula con la funzione s short
 
     /* descramble */
     srsran_scrambling_s_offset(&q->seqs[cfg->area_id]->seq[sf->tti % 10], q->e, 0, cfg->pdsch_cfg.grant.tb[0].nof_bits);

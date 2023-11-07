@@ -372,7 +372,7 @@ void demod_16qam_lte_s(const cf_t* symbols, short* llr, int nsymbols)
     short yre = (short)(SCALE_SHORT_CONV_QAM16 * crealf(symbols[i]));
     short yim = (short)(SCALE_SHORT_CONV_QAM16 * cimagf(symbols[i]));
 
-    llr[4 * i + 0] = -yre;
+    llr[4 * i + 0] = -yre; 
     llr[4 * i + 1] = -yim;
     llr[4 * i + 2] = abs(yre) - 2 * SCALE_SHORT_CONV_QAM16 / sqrtf(10);
     llr[4 * i + 3] = abs(yim) - 2 * SCALE_SHORT_CONV_QAM16 / sqrtf(10);
