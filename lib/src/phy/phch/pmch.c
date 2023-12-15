@@ -145,7 +145,7 @@ int srsran_pmch_init(srsran_pmch_t* q, uint32_t max_prb, uint32_t nof_rx_antenna
     srsran_sch_init(&q->dl_sch);
 
     // Allocate int16_t for reception (LLRs)
-    q->e = srsran_vec_i16_malloc(q->max_re * srsran_mod_bits_x_symbol(SRSRAN_MOD_64QAM));
+    q->e = srsran_vec_i16_malloc(q->max_re * srsran_mod_bits_x_symbol(SRSRAN_MOD_64QAM));  //q->e[carrier*bit_const]
     if (!q->e) {
       goto clean;
     }
@@ -161,14 +161,14 @@ int srsran_pmch_init(srsran_pmch_t* q, uint32_t max_prb, uint32_t nof_rx_antenna
         goto clean;
       }
       for (int j = 0; j < q->nof_rx_antennas; j++) {
-        q->ce[i][j] = srsran_vec_cf_malloc(q->max_re);
+        q->ce[i][j] = srsran_vec_cf_malloc(q->max_re); //q->ce[Ports=4][N_antenna][carrier]
         if (!q->ce[i][j]) {
           goto clean;
         }
       }
     }
     for (int j = 0; j < q->nof_rx_antennas; j++) {
-      q->symbols[j] = srsran_vec_cf_malloc(q->max_re);
+      q->symbols[j] = srsran_vec_cf_malloc(q->max_re);   // q->symbols[N_antenna][carrier]
       if (!q->symbols[j]) {
         goto clean;
       }
@@ -338,16 +338,19 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
                                     channel->noise_estimate);
 
     if (SRSRAN_VERBOSE_ISDEBUG()) {
-      DEBUG("SAVED FILE subframe.dat: received subframe symbols");
+      DEBUG("SAVED FILE subframe2.dat: received subframe symbols");
       srsran_vec_save_file("subframe2.dat", q->symbols[0], cfg->pdsch_cfg.grant.nof_re * sizeof(cf_t));
-      DEBUG("SAVED FILE hest0.dat: channel estimates for port 4");
+      DEBUG("SAVED FILE chest_allchannel.dat: channel estimates for port 4");
       printf("nof_prb=%d, cp=%d, nof_re=%d, grant_re=%d\n",
              q->cell.nof_prb,
              q->cell.cp,
              SRSRAN_NOF_RE(q->cell),
              cfg->pdsch_cfg.grant.nof_re);
-      srsran_vec_save_file("hest2.dat", channel->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
-      srsran_vec_save_file("hest1.dat", channel->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
+      srsran_vec_save_file("chest_allchannel.dat", channel->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
+      DEBUG("SAVED FILE chest_noise.dat: noise esimates");
+      srsran_vec_save_file("chest_noise.dat", channel->noise_estimate, SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
+      DEBUG("SAVED FILE chest_pmch.dat.dat: channel esimates for only pmch");
+      srsran_vec_save_file("chest_pmch.dat", q->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
       DEBUG("SAVED FILE pmch_symbols.dat: symbols after equalization");
       srsran_vec_save_file("pmch_symbols.bin", q->d, cfg->pdsch_cfg.grant.nof_re * sizeof(cf_t));
     }
@@ -358,6 +361,18 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
      */
     srsran_demod_soft_demodulate_s(cfg->pdsch_cfg.grant.tb[0].mod, q->d, q->e, cfg->pdsch_cfg.grant.nof_re); //demodula con la funzione s short
 
+    //extract LLR
+    // for i < cfg->pdsch_cfg.grant.tb[0].nof_bits
+    // Channelest = q->ce[0][0][i]   //extract ce in PMCH for the first antenna
+    // print
+    //   for l < 4
+    //      q->e[0][0][l*i]
+
+
+    a = [c,d,f]
+    a[2] 
+    cast(int)(a[2])
+
     /* descramble */
     srsran_scrambling_s_offset(&q->seqs[cfg->area_id]->seq[sf->tti % 10], q->e, 0, cfg->pdsch_cfg.grant.tb[0].nof_bits);
 
@@ -366,15 +381,15 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
       srsran_vec_save_file("llr.dat", q->e, cfg->pdsch_cfg.grant.tb[0].nof_bits * sizeof(int16_t));
     }
     // - modified PoliMI
-    short *qb = q->e;
-    for (int i = 0; i < cfg->pdsch_cfg.grant.tb[0].nof_bits; i++) {
-      if (qb[i] > 400){
-        qb[i] = 400;
-      }    
-      if (qb[i] < -400){
-        qb[i] = -400;
-      }    
-    }
+    //short *qb = q->e;
+    //for (int i = 0; i < cfg->pdsch_cfg.grant.tb[0].nof_bits; i++) {
+    //  if (qb[i] > 400){
+    //    qb[i] = 400;
+    //  }    
+    //  if (qb[i] < -400){
+    //    qb[i] = -400;
+    //  }    
+    //}
     // - modified PoliMI
 
     out[0].crc                  = (srsran_dlsch_decode(&q->dl_sch, &cfg->pdsch_cfg, q->e, out[0].payload) == 0);
