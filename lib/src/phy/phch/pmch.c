@@ -348,7 +348,7 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
              cfg->pdsch_cfg.grant.nof_re);
       srsran_vec_save_file("chest_allchannel.dat", channel->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
       DEBUG("SAVED FILE chest_noise.dat: noise esimates");
-      srsran_vec_save_file("chest_noise.dat", channel->noise_estimate, SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
+      // srsran_vec_save_file("chest_noise.dat", channel->noise_estimate, SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
       DEBUG("SAVED FILE chest_pmch.dat.dat: channel esimates for only pmch");
       srsran_vec_save_file("chest_pmch.dat", q->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
       DEBUG("SAVED FILE pmch_symbols.dat: symbols after equalization");
@@ -368,10 +368,18 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
     //   for l < 4
     //      q->e[0][0][l*i]
 
+  // - modified ALC
+    short *qb = q->e;
+    cf_t *qe = q->ce[0][0];
+    for (int i = 0; i < (cfg->pdsch_cfg.grant.tb[0].nof_bits)/4; i++) {
+      for (int j = 0; i < 4; j++){
+        int h;
+        h = cabsf(qe[i])/20;
+        qb[i*j] = qb[i*j]/h;
+      }
+    }
+  // - modified ALC
 
-    a = [c,d,f]
-    a[2] 
-    cast(int)(a[2])
 
     /* descramble */
     srsran_scrambling_s_offset(&q->seqs[cfg->area_id]->seq[sf->tti % 10], q->e, 0, cfg->pdsch_cfg.grant.tb[0].nof_bits);
