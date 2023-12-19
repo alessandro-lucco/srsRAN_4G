@@ -335,9 +335,9 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
                                     q->nof_rx_antennas,
                                     cfg->pdsch_cfg.grant.nof_re,
                                     1.0f,
-                                    channel->noise_estimate);
+                                    2.0f); //channel->noise_estimate
 
-    if (SRSRAN_VERBOSE_ISDEBUG()) {
+    if (true) {  /*SRSRAN_VERBOSE_ISDEBUG()*/
       DEBUG("SAVED FILE subframe2.dat: received subframe symbols");
       srsran_vec_save_file("subframe2.dat", q->symbols[0], cfg->pdsch_cfg.grant.nof_re * sizeof(cf_t));
       DEBUG("SAVED FILE chest_allchannel.dat: channel estimates for port 4");
@@ -361,30 +361,32 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
      */
     srsran_demod_soft_demodulate_s(cfg->pdsch_cfg.grant.tb[0].mod, q->d, q->e, cfg->pdsch_cfg.grant.nof_re); //demodula con la funzione s short
 
-    //extract LLR
-    // for i < cfg->pdsch_cfg.grant.tb[0].nof_bits
-    // Channelest = q->ce[0][0][i]   //extract ce in PMCH for the first antenna
-    // print
-    //   for l < 4
-    //      q->e[0][0][l*i]
-
+    if (true) {  /*SRSRAN_VERBOSE_ISDEBUG()*/
+      DEBUG("SAVED FILE llr_bef.dat: LLR estimates before multiplication");
+      srsran_vec_save_file("llr_bef.dat", q->e, cfg->pdsch_cfg.grant.tb[0].nof_bits * sizeof(int16_t));
+    }
+   
   // - modified ALC
     short *qb = q->e;
-    cf_t *qe = q->ce[0][0];
-    for (int i = 0; i < (cfg->pdsch_cfg.grant.tb[0].nof_bits)/4; i++) {
-      for (int j = 0; i < 4; j++){
+    /*cf_t *qe = q->ce[0][0];*/
+    for (int i = 0; i < cfg->pdsch_cfg.grant.nof_re; i++) {
+      for (int j = 0; j < 4; j++){
         int h;
-        h = cabsf(qe[i])/20;
+        h = cabsf(q->ce[0][0][i])/20;
         qb[i*j] = qb[i*j]/h;
       }
     }
   // - modified ALC
 
+    if (true) {  /*SRSRAN_VERBOSE_ISDEBUG()*/
+      DEBUG("SAVED FILE llr_mult.dat: LLR estimates after multiplication");
+      srsran_vec_save_file("llr.dat", q->e, cfg->pdsch_cfg.grant.tb[0].nof_bits * sizeof(int16_t));
+    }
 
     /* descramble */
     srsran_scrambling_s_offset(&q->seqs[cfg->area_id]->seq[sf->tti % 10], q->e, 0, cfg->pdsch_cfg.grant.tb[0].nof_bits);
 
-    if (SRSRAN_VERBOSE_ISDEBUG()) {
+    if (true) {  /*SRSRAN_VERBOSE_ISDEBUG()*/
       DEBUG("SAVED FILE llr.dat: LLR estimates after demodulation and descrambling");
       srsran_vec_save_file("llr.dat", q->e, cfg->pdsch_cfg.grant.tb[0].nof_bits * sizeof(int16_t));
     }
