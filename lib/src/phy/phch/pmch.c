@@ -341,14 +341,12 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
       DEBUG("SAVED FILE subframe2.dat: received subframe symbols");
       srsran_vec_save_file("subframe2.dat", q->symbols[0], cfg->pdsch_cfg.grant.nof_re * sizeof(cf_t));
       DEBUG("SAVED FILE chest_allchannel.dat: channel estimates for port 4");
-      printf("nof_prb=%d, cp=%d, nof_re=%d, grant_re=%d\n",
+      /*printf("nof_prb=%d, cp=%d, nof_re=%d, grant_re=%d\n",
              q->cell.nof_prb,
              q->cell.cp,
              SRSRAN_NOF_RE(q->cell),
-             cfg->pdsch_cfg.grant.nof_re);
+             cfg->pdsch_cfg.grant.nof_re);*/
       srsran_vec_save_file("chest_allchannel.dat", channel->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
-      DEBUG("SAVED FILE chest_noise.dat: noise esimates");
-      // srsran_vec_save_file("chest_noise.dat", channel->noise_estimate, SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
       DEBUG("SAVED FILE chest_pmch.dat.dat: channel esimates for only pmch");
       srsran_vec_save_file("chest_pmch.dat", q->ce[0][0], SRSRAN_NOF_RE(q->cell) * sizeof(cf_t));
       DEBUG("SAVED FILE pmch_symbols.dat: symbols after equalization");
@@ -367,19 +365,20 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
     }
    
   // - modified ALC
+  
     short *qb = q->e;
-    /*cf_t *qe = q->ce[0][0];*/
     for (int i = 0; i < cfg->pdsch_cfg.grant.nof_re; i++) {
       for (int j = 0; j < 4; j++){
-        int h;
+        float h;
         h = cabsf(q->ce[0][0][i])/20;
-        qb[i*j] = qb[i*j]/h;
+        qb[i*4 + j] = qb[i*4 + j]*h;
       }
     }
+  
   // - modified ALC
 
     if (true) {  /*SRSRAN_VERBOSE_ISDEBUG()*/
-      DEBUG("SAVED FILE llr_mult.dat: LLR estimates after multiplication");
+      DEBUG("SAVED FILE llr.dat: LLR estimates after multiplication");
       srsran_vec_save_file("llr.dat", q->e, cfg->pdsch_cfg.grant.tb[0].nof_bits * sizeof(int16_t));
     }
 
@@ -390,17 +389,6 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
       DEBUG("SAVED FILE llr.dat: LLR estimates after demodulation and descrambling");
       srsran_vec_save_file("llr.dat", q->e, cfg->pdsch_cfg.grant.tb[0].nof_bits * sizeof(int16_t));
     }
-    // - modified PoliMI
-    //short *qb = q->e;
-    //for (int i = 0; i < cfg->pdsch_cfg.grant.tb[0].nof_bits; i++) {
-    //  if (qb[i] > 400){
-    //    qb[i] = 400;
-    //  }    
-    //  if (qb[i] < -400){
-    //    qb[i] = -400;
-    //  }    
-    //}
-    // - modified PoliMI
 
     out[0].crc                  = (srsran_dlsch_decode(&q->dl_sch, &cfg->pdsch_cfg, q->e, out[0].payload) == 0);
     out[0].avg_iterations_block = srsran_sch_last_noi(&q->dl_sch);
