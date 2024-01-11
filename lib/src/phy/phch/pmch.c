@@ -370,7 +370,8 @@ int srsran_pmch_decode(srsran_pmch_t*         q,
     for (int i = 0; i < cfg->pdsch_cfg.grant.nof_re; i++) {
       for (int j = 0; j < 4; j++){
         float h;
-        h = cabsf(q->ce[0][0][i])/20;
+        //h = cabsf(q->ce[0][0][i])*0.05; //divide per 20 
+        h = (q->ce[0][0][i] * conj(q->ce[0][0][i]))*0.0025;
         qb[i*4 + j] = qb[i*4 + j]*h;
       }
     }
